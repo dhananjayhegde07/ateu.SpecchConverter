@@ -26,6 +26,9 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Locale
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,6 +56,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.zIndex
 import com.google.mlkit.nl.translate.TranslateLanguage
 import kotlinx.coroutines.launch
@@ -176,6 +180,8 @@ fun SpeechToTextContent(
     val expanded1 = remember { mutableStateOf(false) }
     val expanded2 = remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     if(loading.value){
         Loading()
     }
@@ -281,6 +287,17 @@ fun SpeechToTextContent(
                         }
                     }
 
+
+                    Icon(
+                        painter = painterResource(R.drawable.copy_svgrepo_com),
+                        contentDescription = "copy",
+                        modifier = Modifier.height(20.dp)
+                            .clickable{
+                                val clipData = ClipData.newPlainText("text", spokenText.value)
+                                clipboardManager.setPrimaryClip(clipData)
+                            }
+                    )
+
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(text = spokenText.value, style = MaterialTheme.typography.bodyLarge)
@@ -297,10 +314,11 @@ fun SpeechToTextContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(onClick = {
+
                     if (isListening.value) {
                         speechRecognizer.stopListening()
                     } else {
-                        // Dynamically update the language in the intent
+
                         Log.d("TAG", "SpeechToTextContent: setting ${source.value.speechRecognizerTag}")
                         val updatedIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
